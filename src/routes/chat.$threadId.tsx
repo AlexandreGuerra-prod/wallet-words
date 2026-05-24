@@ -188,12 +188,13 @@ function ChatWindow({
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
-        body: { threadId },
-        prepareSendMessagesRequest: async ({ messages, body }) => {
+        prepareSendMessagesRequest: async ({ messages }) => {
           const { data } = await supabase.auth.getSession();
+          const headers: Record<string, string> = {};
+          if (data.session) headers.Authorization = `Bearer ${data.session.access_token}`;
           return {
-            body: { ...body, threadId, messages },
-            headers: data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {},
+            body: { threadId, messages },
+            headers,
           };
         },
       }),
