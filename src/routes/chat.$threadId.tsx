@@ -228,14 +228,20 @@ function ChatWindow({
             <ConversationEmptyState
               icon={<Sparkles className="h-8 w-8 text-primary" />}
               title="Como posso ajudar com suas finanças?"
-              description={
-                <div className="space-y-2 mt-2">
-                  <Suggestion text="Gastei 45 no mercado" onPick={setInput} />
-                  <Suggestion text="Recebi 5000 de salário" onPick={setInput} />
-                  <Suggestion text="Quanto eu gastei este mês?" onPick={setInput} />
-                </div>
-              }
-            />
+            >
+              <div className="text-muted-foreground">
+                <Sparkles className="h-8 w-8 text-primary mx-auto" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-medium text-sm">Como posso ajudar com suas finanças?</h3>
+              </div>
+              <div className="space-y-2 mt-2 w-full max-w-sm">
+                <Suggestion text="Gastei 45 no mercado" onPick={setInput} />
+                <Suggestion text="Recebi 5000 de salário" onPick={setInput} />
+                <Suggestion text="Quanto eu gastei este mês?" onPick={setInput} />
+              </div>
+            </ConversationEmptyState>
+
           ) : (
             messages.map((m) => (
               <Message key={m.id} from={m.role === "user" ? "user" : "assistant"}>
