@@ -212,13 +212,13 @@ function ChatWindow({
   const [input, setInput] = useState("");
   const loading = status === "submitted" || status === "streaming";
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = () => {
     const text = input.trim();
     if (!text || loading) return;
     sendMessage({ text });
     setInput("");
   };
+
 
   return (
     <>
