@@ -8,7 +8,14 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Toaster } from "@/components/ui/sonner";
+
 import appCss from "../styles.css?url";
+
+const fontLink = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap";
 
 function NotFoundComponent() {
   return (
