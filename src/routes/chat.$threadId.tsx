@@ -74,16 +74,12 @@ function ChatPage() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-72 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col">
-        <div className="p-4 flex items-center gap-2">
-          <div className="h-9 w-9 rounded-lg bg-primary glow flex items-center justify-center shrink-0">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <div>
-            <div className="font-display font-semibold leading-none">Finn</div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest">Agente financeiro</div>
-          </div>
+      <AppNav />
+      {/* Threads sidebar */}
+      <aside className="w-64 shrink-0 bg-sidebar/60 border-r border-sidebar-border flex flex-col">
+        <div className="p-4">
+          <div className="font-display font-semibold leading-none">Conversas</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Histórico</div>
         </div>
 
         <div className="px-3">
