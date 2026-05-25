@@ -12,8 +12,9 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit } from "@/components/ai-elements/prompt-input";
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { Plus, Trash2, LogOut, Sparkles, Wallet, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Trash2, Sparkles, Wallet, TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
+import { AppNav } from "@/components/app-nav";
 
 export const Route = createFileRoute("/chat/$threadId")({
   component: ChatPage,
