@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useChat } from "@ai-sdk/react";
@@ -12,8 +12,9 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit } from "@/components/ai-elements/prompt-input";
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { Plus, Trash2, LogOut, Sparkles, Wallet, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Trash2, Sparkles, Wallet, TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
+import { AppNav } from "@/components/app-nav";
 
 export const Route = createFileRoute("/chat/$threadId")({
   component: ChatPage,
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/chat/$threadId")({
 function ChatPage() {
   const { threadId } = Route.useParams();
   const navigate = useNavigate();
-  const router = useRouter();
+  
   const qc = useQueryClient();
   const [authed, setAuthed] = useState<boolean | null>(null);
 
@@ -73,16 +74,12 @@ function ChatPage() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-72 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col">
-        <div className="p-4 flex items-center gap-2">
-          <div className="h-9 w-9 rounded-lg bg-primary glow flex items-center justify-center shrink-0">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <div>
-            <div className="font-display font-semibold leading-none">Finn</div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest">Agente financeiro</div>
-          </div>
+      <AppNav />
+      {/* Threads sidebar */}
+      <aside className="w-64 shrink-0 bg-sidebar/60 border-r border-sidebar-border flex flex-col">
+        <div className="p-4">
+          <div className="font-display font-semibold leading-none">Conversas</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Histórico</div>
         </div>
 
         <div className="px-3">
@@ -145,16 +142,6 @@ function ChatPage() {
           </div>
         )}
 
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            router.invalidate();
-            navigate({ to: "/login" });
-          }}
-          className="m-3 mt-0 text-xs text-muted-foreground hover:text-foreground flex items-center gap-2 px-3 py-2"
-        >
-          <LogOut className="h-3.5 w-3.5" /> Sair
-        </button>
       </aside>
 
       {/* Chat */}
