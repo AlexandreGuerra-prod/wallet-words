@@ -24,7 +24,7 @@ export const Route = createFileRoute("/chat/$threadId")({
 function ChatPage() {
   const { threadId } = Route.useParams();
   const navigate = useNavigate();
-  const router = useRouter();
+  void useNavigate;
   const qc = useQueryClient();
   const [authed, setAuthed] = useState<boolean | null>(null);
 
