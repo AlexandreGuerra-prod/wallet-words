@@ -142,16 +142,6 @@ function ChatPage() {
           </div>
         )}
 
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            router.invalidate();
-            navigate({ to: "/login" });
-          }}
-          className="m-3 mt-0 text-xs text-muted-foreground hover:text-foreground flex items-center gap-2 px-3 py-2"
-        >
-          <LogOut className="h-3.5 w-3.5" /> Sair
-        </button>
       </aside>
 
       {/* Chat */}
