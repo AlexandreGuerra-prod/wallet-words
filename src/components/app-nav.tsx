@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { MessageCircle, LayoutDashboard, Wallet, Target, Repeat, LogOut, Sparkles } from "lucide-react";
+import { MessageCircle, LayoutDashboard, Wallet, Target, Repeat, Upload, LogOut, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const items = [
@@ -8,6 +8,7 @@ const items = [
   { to: "/accounts", icon: Wallet, label: "Contas" },
   { to: "/goals", icon: Target, label: "Metas" },
   { to: "/recurrences", icon: Repeat, label: "Recorrências" },
+  { to: "/import", icon: Upload, label: "Importar" },
 ] as const;
 
 export function AppNav() {
