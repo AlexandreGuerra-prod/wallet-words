@@ -46,7 +46,7 @@ function ImportPage() {
       for (let i = 1; i <= doc.numPages; i++) {
         const page = await doc.getPage(i);
         const content = await page.getTextContent();
-        out += content.items.map((it: { str?: string }) => it.str ?? "").join(" ") + "\n";
+        out += content.items.map((it) => ("str" in it ? it.str : "")).join(" ") + "\n";
       }
       return { text: out, format: "pdf" };
     }
