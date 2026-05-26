@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RecurrencesRouteImport } from './routes/recurrences'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -27,6 +28,11 @@ const RecurrencesRoute = RecurrencesRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GoalsRoute = GoalsRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/goals': typeof GoalsRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/recurrences': typeof RecurrencesRoute
   '/api/chat': typeof ApiChatRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/goals': typeof GoalsRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/recurrences': typeof RecurrencesRoute
   '/api/chat': typeof ApiChatRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/goals': typeof GoalsRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/recurrences': typeof RecurrencesRoute
   '/api/chat': typeof ApiChatRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/goals'
+    | '/import'
     | '/login'
     | '/recurrences'
     | '/api/chat'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/goals'
+    | '/import'
     | '/login'
     | '/recurrences'
     | '/api/chat'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/dashboard'
     | '/goals'
+    | '/import'
     | '/login'
     | '/recurrences'
     | '/api/chat'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   GoalsRoute: typeof GoalsRoute
+  ImportRoute: typeof ImportRoute
   LoginRoute: typeof LoginRoute
   RecurrencesRoute: typeof RecurrencesRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -160,6 +173,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/goals': {
@@ -230,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRouteWithChildren,
   DashboardRoute: DashboardRoute,
   GoalsRoute: GoalsRoute,
+  ImportRoute: ImportRoute,
   LoginRoute: LoginRoute,
   RecurrencesRoute: RecurrencesRoute,
   ApiChatRoute: ApiChatRoute,
