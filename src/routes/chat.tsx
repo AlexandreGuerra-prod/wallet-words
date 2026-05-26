@@ -1,10 +1,12 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { createThread, listThreads } from "@/lib/threads.functions";
 
 export const Route = createFileRoute("/chat")({
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     if (typeof window === "undefined") return;
+    // Only auto-redirect on the bare /chat path; let child routes render normally.
+    if (location.pathname !== "/chat") return;
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw redirect({ to: "/login" });
     const threads = await listThreads();
@@ -14,5 +16,5 @@ export const Route = createFileRoute("/chat")({
     const fresh = await createThread({ data: {} });
     throw redirect({ to: "/chat/$threadId", params: { threadId: fresh.id } });
   },
-  component: () => null,
+  component: () => <Outlet />,
 });
