@@ -87,18 +87,33 @@ export const Route = createFileRoute("/api/chat")({
         const gateway = createLovableAiGatewayProvider(apiKey);
         const model = gateway("google/gemini-3-flash-preview");
 
+        // Fetch accounts for record_transaction account resolution
+        const { data: accs } = await sb
+          .from("accounts")
+          .select("id,name,type")
+          .eq("user_id", userId)
+          .eq("archived", false);
+        const accList = accs ?? [];
+
+        const ACCOUNT_TYPES = ["checking", "savings", "cash", "credit_card", "investment"] as const;
+        const FREQ = ["weekly", "monthly", "yearly"] as const;
+
         const tools = {
           record_transaction: tool({
-            description: "Registra uma movimentação financeira (despesa, receita ou transferência) na conta do usuário.",
+            description: "Registra uma movimentação financeira (despesa, receita ou transferência).",
             inputSchema: z.object({
-              type: z.enum(["expense", "income", "transfer"]).describe("Tipo: expense=despesa/gasto, income=receita/salário, transfer=transferência entre contas"),
-              amount: z.number().positive().describe("Valor em reais (positivo)"),
-              description: z.string().min(1).max(200).describe("Descrição curta (ex: 'Mercado', 'Uber', 'Salário')"),
-              category: z.enum(catNames as [string, ...string[]]).optional().describe("Categoria mais adequada"),
-              occurred_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe("Data da movimentação YYYY-MM-DD"),
+              type: z.enum(["expense", "income", "transfer"]),
+              amount: z.number().positive(),
+              description: z.string().min(1).max(200),
+              category: z.enum(catNames as [string, ...string[]]).optional(),
+              account_name: z.string().optional().describe("Nome da conta/cartão, se citado"),
+              occurred_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
             }),
-            execute: async ({ type, amount, description, category, occurred_at }) => {
+            execute: async ({ type, amount, description, category, account_name, occurred_at }) => {
               const cat = category ? catList.find((c) => c.name === category) : null;
+              const acc = account_name
+                ? accList.find((a) => a.name.toLowerCase().includes(account_name.toLowerCase()))
+                : null;
               const { data, error } = await sb
                 .from("transactions")
                 .insert({
@@ -107,28 +122,23 @@ export const Route = createFileRoute("/api/chat")({
                   amount,
                   description,
                   category_id: cat?.id ?? null,
+                  account_id: acc?.id ?? null,
                   occurred_at,
                   source: "chat",
                 })
                 .select("id,type,amount,description,occurred_at")
                 .single();
               if (error) return { ok: false, error: error.message };
-              return {
-                ok: true,
-                transaction: data,
-                category: cat?.name ?? "Outros",
-              };
+              return { ok: true, transaction: data, category: cat?.name ?? "Outros", account: acc?.name ?? null };
             },
           }),
           list_recent: tool({
-            description: "Lista as últimas movimentações financeiras do usuário.",
-            inputSchema: z.object({
-              limit: z.number().int().min(1).max(50).default(10),
-            }),
+            description: "Lista as últimas movimentações.",
+            inputSchema: z.object({ limit: z.number().int().min(1).max(50).default(10) }),
             execute: async ({ limit }) => {
               const { data, error } = await sb
                 .from("transactions")
-                .select("type,amount,description,occurred_at,categories(name)")
+                .select("type,amount,description,occurred_at,categories(name),accounts(name)")
                 .eq("user_id", userId)
                 .order("occurred_at", { ascending: false })
                 .limit(limit);
@@ -137,7 +147,7 @@ export const Route = createFileRoute("/api/chat")({
             },
           }),
           get_summary: tool({
-            description: "Resumo financeiro do mês atual: receitas, despesas e saldo. Use para perguntas como 'quanto gastei?', 'qual meu saldo?'.",
+            description: "Resumo do mês: receitas, despesas, saldo, por categoria.",
             inputSchema: z.object({}),
             execute: async () => {
               const now = new Date();
@@ -160,6 +170,112 @@ export const Route = createFileRoute("/api/chat")({
                 }
               }
               return { ok: true, month_to_date: { income, expense, balance: income - expense, by_category: byCat } };
+            },
+          }),
+          create_account: tool({
+            description: "Cria uma nova conta bancária ou cartão de crédito.",
+            inputSchema: z.object({
+              name: z.string().min(1).max(60),
+              type: z.enum(ACCOUNT_TYPES),
+              institution: z.string().max(60).optional(),
+              credit_limit: z.number().nonnegative().optional(),
+              closing_day: z.number().int().min(1).max(31).optional(),
+              due_day: z.number().int().min(1).max(31).optional(),
+            }),
+            execute: async (input) => {
+              const { data, error } = await sb.from("accounts").insert({ ...input, user_id: userId }).select("id,name,type").single();
+              if (error) return { ok: false, error: error.message };
+              return { ok: true, account: data };
+            },
+          }),
+          list_accounts: tool({
+            description: "Lista as contas e cartões do usuário.",
+            inputSchema: z.object({}),
+            execute: async () => {
+              const { data, error } = await sb
+                .from("accounts").select("id,name,type,institution,archived").eq("user_id", userId).eq("archived", false);
+              if (error) return { ok: false, error: error.message };
+              return { ok: true, accounts: data };
+            },
+          }),
+          create_category: tool({
+            description: "Cria uma categoria customizada.",
+            inputSchema: z.object({ name: z.string().min(1).max(40), icon: z.string().max(8).optional() }),
+            execute: async ({ name, icon }) => {
+              const { data, error } = await sb
+                .from("categories").insert({ name, icon: icon ?? null, user_id: userId, is_default: false })
+                .select("id,name").single();
+              if (error) return { ok: false, error: error.message };
+              return { ok: true, category: data };
+            },
+          }),
+          create_goal: tool({
+            description: "Cria uma meta financeira.",
+            inputSchema: z.object({
+              name: z.string().min(1).max(100),
+              target_amount: z.number().positive(),
+              current_amount: z.number().nonnegative().default(0),
+              deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+            }),
+            execute: async (input) => {
+              const { data, error } = await sb.from("goals").insert({ ...input, user_id: userId }).select("id,name,target_amount").single();
+              if (error) return { ok: false, error: error.message };
+              return { ok: true, goal: data };
+            },
+          }),
+          update_goal_progress: tool({
+            description: "Adiciona (ou subtrai, com valor negativo) progresso a uma meta pelo nome.",
+            inputSchema: z.object({ name: z.string().min(1), amount: z.number() }),
+            execute: async ({ name, amount }) => {
+              const { data: g } = await sb.from("goals").select("id,current_amount,target_amount").eq("user_id", userId).ilike("name", `%${name}%`).maybeSingle();
+              if (!g) return { ok: false, error: "Meta não encontrada" };
+              const next = Math.max(0, Number(g.current_amount) + amount);
+              const status = next >= Number(g.target_amount) ? "completed" : "active";
+              const { error } = await sb.from("goals").update({ current_amount: next, status }).eq("id", g.id).eq("user_id", userId);
+              if (error) return { ok: false, error: error.message };
+              return { ok: true, current_amount: next, status };
+            },
+          }),
+          list_goals: tool({
+            description: "Lista metas do usuário.",
+            inputSchema: z.object({}),
+            execute: async () => {
+              const { data, error } = await sb.from("goals").select("id,name,target_amount,current_amount,status,deadline").eq("user_id", userId);
+              if (error) return { ok: false, error: error.message };
+              return { ok: true, goals: data };
+            },
+          }),
+          create_recurrence: tool({
+            description: "Cria uma recorrência (assinatura, salário fixo, conta mensal).",
+            inputSchema: z.object({
+              description: z.string().min(1).max(120),
+              type: z.enum(["income", "expense"]),
+              amount: z.number().positive(),
+              frequency: z.enum(FREQ).default("monthly"),
+              day_of_month: z.number().int().min(1).max(31).optional(),
+              next_run_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+              account_name: z.string().optional(),
+              category: z.enum(catNames as [string, ...string[]]).optional(),
+            }),
+            execute: async ({ account_name, category, ...rest }) => {
+              const cat = category ? catList.find((c) => c.name === category) : null;
+              const acc = account_name ? accList.find((a) => a.name.toLowerCase().includes(account_name.toLowerCase())) : null;
+              const { data, error } = await sb.from("recurrences")
+                .insert({ ...rest, user_id: userId, category_id: cat?.id ?? null, account_id: acc?.id ?? null })
+                .select("id,description").single();
+              if (error) return { ok: false, error: error.message };
+              return { ok: true, recurrence: data };
+            },
+          }),
+          list_recurrences: tool({
+            description: "Lista recorrências ativas.",
+            inputSchema: z.object({}),
+            execute: async () => {
+              const { data, error } = await sb.from("recurrences")
+                .select("id,description,type,amount,frequency,next_run_at,active")
+                .eq("user_id", userId).eq("active", true);
+              if (error) return { ok: false, error: error.message };
+              return { ok: true, recurrences: data };
             },
           }),
         };
