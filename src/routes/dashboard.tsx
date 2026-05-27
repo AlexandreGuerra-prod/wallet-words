@@ -194,9 +194,10 @@ function DashboardPage() {
                   <Empty text="Nenhuma transação" />
                 ) : (
                   <ul className="space-y-2.5">
-                    {d.recent.map((t: { id: string; type: string; amount: number | string; description: string; occurred_at: string; categories: { name?: string; icon?: string } | null }) => {
+                    {d.recent.map((t) => {
                       const exp = t.type === "expense";
-                      const cat = t.categories;
+                      const cat = t.categories as { name?: string | null; icon?: string | null } | null;
+
                       return (
                         <li key={t.id} className="flex items-center gap-3 text-sm">
                           <div className={`h-8 w-8 rounded-lg flex items-center justify-center text-xs ${exp ? "bg-destructive/15 text-destructive" : "bg-success/15 text-success"}`}>
