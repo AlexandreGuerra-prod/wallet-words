@@ -112,8 +112,9 @@ function DashboardPage() {
                       <XAxis
                         dataKey="date"
                         tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }}
-                        tickFormatter={(v: string) => (v.length === 7 ? v.slice(2) : v.slice(5))}
+                        tickFormatter={(v: string) => (v.length === 7 ? `${v.slice(5)}/${v.slice(2, 4)}` : v.slice(5))}
                       />
+
                       <YAxis tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} tickFormatter={(v) => `R$${v}`} />
                       <Tooltip content={<TooltipBox />} />
                       <Area type="monotone" dataKey="income" stroke="#10b981" fill="url(#gIn)" name="Receitas" />
