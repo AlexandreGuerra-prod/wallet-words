@@ -39,29 +39,35 @@ export const getDashboard = createServerFn({ method: "GET" })
 
     const periodStart = startDateFor(period);
 
-    const applyFilters = <T extends { eq: (k: string, v: unknown) => T; gte: (k: string, v: unknown) => T }>(q: T) => {
-      let out = q.eq("user_id", userId);
-      if (periodStart) out = out.gte("occurred_at", periodStart);
-      if (accountId) out = out.eq("account_id", accountId);
-      if (categoryId) out = out.eq("category_id", categoryId);
-      return out;
+    const baseTx = () => {
+      let q = supabase.from("transactions").select("type,amount,categories(name,icon)").eq("user_id", userId);
+      if (periodStart) q = q.gte("occurred_at", periodStart);
+      if (accountId) q = q.eq("account_id", accountId);
+      if (categoryId) q = q.eq("category_id", categoryId);
+      return q;
+    };
+    const baseSeries = () => {
+      let q = supabase.from("transactions").select("type,amount,occurred_at").eq("user_id", userId);
+      if (periodStart) q = q.gte("occurred_at", periodStart);
+      if (accountId) q = q.eq("account_id", accountId);
+      if (categoryId) q = q.eq("category_id", categoryId);
+      return q.order("occurred_at", { ascending: true });
+    };
+    const baseRecent = () => {
+      let q = supabase
+        .from("transactions")
+        .select("id,type,amount,description,occurred_at,categories(name,icon)")
+        .eq("user_id", userId);
+      if (periodStart) q = q.gte("occurred_at", periodStart);
+      if (accountId) q = q.eq("account_id", accountId);
+      if (categoryId) q = q.eq("category_id", categoryId);
+      return q.order("occurred_at", { ascending: false }).order("created_at", { ascending: false }).limit(10);
     };
 
     const [{ data: periodTxs }, { data: dayTxs }, { data: recentTxs }, { data: goalsData }] = await Promise.all([
-      applyFilters(
-        supabase.from("transactions").select("type,amount,categories(name,icon)"),
-      ),
-      applyFilters(
-        supabase.from("transactions").select("type,amount,occurred_at").order("occurred_at", { ascending: true }),
-      ),
-      applyFilters(
-        supabase
-          .from("transactions")
-          .select("id,type,amount,description,occurred_at,categories(name,icon)")
-          .order("occurred_at", { ascending: false })
-          .order("created_at", { ascending: false })
-          .limit(10),
-      ),
+      baseTx(),
+      baseSeries(),
+      baseRecent(),
       supabase
         .from("goals")
         .select("id,name,target_amount,current_amount,status,deadline")
@@ -70,6 +76,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false })
         .limit(4),
     ]);
+
 
     let income = 0, expense = 0;
     const byCategory: Record<string, number> = {};
