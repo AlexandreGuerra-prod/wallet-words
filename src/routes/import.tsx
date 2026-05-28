@@ -185,6 +185,13 @@ function ImportPage() {
                     {t.type === "income" ? "+" : "−"}{formatBRL(t.amount)}
                   </div>
                   <button
+                    onClick={() => { setEditIdx(i); setEditDraft({ ...t }); }}
+                    className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent/40"
+                    aria-label="Editar"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
                     onClick={() => setParsed((prev) => prev?.filter((_, idx) => idx !== i) ?? null)}
                     className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     aria-label="Remover"
@@ -202,6 +209,93 @@ function ImportPage() {
             Nenhuma transação detectada neste arquivo.
           </div>
         )}
+
+        <Dialog open={editIdx !== null} onOpenChange={(o) => { if (!o) { setEditIdx(null); setEditDraft(null); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar lançamento</DialogTitle>
+            </DialogHeader>
+            {editDraft && (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label>Descrição</Label>
+                  <Input
+                    value={editDraft.description}
+                    onChange={(e) => setEditDraft({ ...editDraft, description: e.target.value })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Tipo</Label>
+                    <Select
+                      value={editDraft.type}
+                      onValueChange={(v) => setEditDraft({ ...editDraft, type: v as "expense" | "income" })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="expense">Despesa</SelectItem>
+                        <SelectItem value="income">Receita</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Valor (R$)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editDraft.amount}
+                      onChange={(e) => setEditDraft({ ...editDraft, amount: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Data</Label>
+                    <Input
+                      type="date"
+                      value={editDraft.occurred_at}
+                      onChange={(e) => setEditDraft({ ...editDraft, occurred_at: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Categoria</Label>
+                    <Select
+                      value={editDraft.suggested_category ?? "__none__"}
+                      onValueChange={(v) => setEditDraft({ ...editDraft, suggested_category: v === "__none__" ? null : v })}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Sem categoria" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Sem categoria</SelectItem>
+                        {(categoriesQ.data ?? []).map((c) => (
+                          <SelectItem key={c.id} value={c.name}>
+                            {c.icon ? `${c.icon} ` : ""}{c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => { setEditIdx(null); setEditDraft(null); }}>Cancelar</Button>
+              <Button
+                onClick={() => {
+                  if (editIdx === null || !editDraft) return;
+                  if (!editDraft.description.trim()) { toast.error("Descrição obrigatória"); return; }
+                  if (!(editDraft.amount > 0)) { toast.error("Valor deve ser maior que zero"); return; }
+                  if (!/^\d{4}-\d{2}-\d{2}$/.test(editDraft.occurred_at)) { toast.error("Data inválida"); return; }
+                  setParsed((prev) => prev?.map((p, idx) => idx === editIdx ? { ...editDraft } : p) ?? null);
+                  setEditIdx(null);
+                  setEditDraft(null);
+                }}
+              >
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppShell>
   );
