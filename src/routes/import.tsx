@@ -36,6 +36,9 @@ function ImportPage() {
   const [isCreditCard, setIsCreditCard] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [parsed, setParsed] = useState<ParsedTx[] | null>(null);
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<ParsedTx | null>(null);
+  const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: () => listCategories() });
 
   async function extractText(f: File): Promise<{ text: string; format: "ofx" | "csv" | "pdf" }> {
     const name = f.name.toLowerCase();
