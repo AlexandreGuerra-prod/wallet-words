@@ -4,11 +4,14 @@ import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { listAccounts } from "@/lib/accounts.functions";
+import { listCategories } from "@/lib/categories.functions";
 import { parseStatement, bulkImportTransactions } from "@/lib/import.functions";
-import { Upload, FileText, Loader2, CheckCircle2, Trash2 } from "lucide-react";
+import { Upload, FileText, Loader2, CheckCircle2, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { formatBRL } from "@/lib/format";
 
