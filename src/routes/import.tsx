@@ -38,6 +38,7 @@ function ImportPage() {
   const [parsed, setParsed] = useState<ParsedTx[] | null>(null);
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<ParsedTx | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: () => listCategories() });
 
   async function extractText(f: File): Promise<{ text: string; format: "ofx" | "csv" | "pdf" }> {
@@ -97,6 +98,7 @@ function ImportPage() {
       toast.success(`${r.inserted} transações importadas`);
       setParsed(null);
       setFile(null);
+      setConfirmOpen(false);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -159,11 +161,11 @@ function ImportPage() {
                 </div>
               </div>
               <Button
-                onClick={() => importM.mutate()}
+                onClick={() => setConfirmOpen(true)}
                 disabled={selectedCount === 0 || importM.isPending}
                 className="ml-auto"
               >
-                {importM.isPending ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Importando…</> : <><CheckCircle2 className="h-4 w-4 mr-1" /> Importar selecionadas</>}
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Revisar e importar
               </Button>
             </div>
             <div className="max-h-[60vh] overflow-y-auto divide-y divide-border">
@@ -292,6 +294,60 @@ function ImportPage() {
                 }}
               >
                 Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={confirmOpen} onOpenChange={(o) => { if (!importM.isPending) setConfirmOpen(o); }}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Confirmar importação</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="rounded-lg bg-muted/40 p-3 grid grid-cols-3 gap-3 text-sm">
+                <div>
+                  <div className="text-xs text-muted-foreground">Lançamentos</div>
+                  <div className="font-medium tabular-nums">{selectedCount}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Receitas</div>
+                  <div className="font-medium tabular-nums text-emerald-400">{formatBRL(totalIncome)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Despesas</div>
+                  <div className="font-medium tabular-nums">{formatBRL(totalExpense)}</div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Revise abaixo. Após confirmar, os lançamentos serão salvos
+                {accountId ? " na conta selecionada" : " sem vínculo de conta"}.
+                Esta ação pode ser desfeita removendo cada lançamento na tela de Lançamentos.
+              </p>
+              <div className="max-h-[40vh] overflow-y-auto rounded-lg border border-border divide-y divide-border">
+                {(parsed ?? []).filter((t) => t._enabled).map((t, i) => (
+                  <div key={i} className="px-3 py-2 flex items-center gap-3 text-sm">
+                    <div className="flex-1 min-w-0">
+                      <div className="truncate font-medium">{t.description}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {t.occurred_at}{t.suggested_category ? ` · ${t.suggested_category}` : " · Sem categoria"}
+                      </div>
+                    </div>
+                    <div className={`tabular-nums ${t.type === "income" ? "text-emerald-400" : ""}`}>
+                      {t.type === "income" ? "+" : "−"}{formatBRL(t.amount)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setConfirmOpen(false)} disabled={importM.isPending}>
+                Voltar para editar
+              </Button>
+              <Button onClick={() => importM.mutate()} disabled={importM.isPending}>
+                {importM.isPending
+                  ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Importando…</>
+                  : <><CheckCircle2 className="h-4 w-4 mr-1" /> Confirmar e importar {selectedCount}</>}
               </Button>
             </DialogFooter>
           </DialogContent>
