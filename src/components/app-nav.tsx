@@ -1,14 +1,16 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { MessageCircle, LayoutDashboard, Wallet, Target, Repeat, Upload, LogOut, Sparkles } from "lucide-react";
+import { MessageCircle, LayoutDashboard, Wallet, Target, Repeat, Upload, LogOut, Sparkles, ListChecks, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const items = [
   { to: "/chat", icon: MessageCircle, label: "Chat" },
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/transactions", icon: ListChecks, label: "Lançamentos" },
   { to: "/accounts", icon: Wallet, label: "Contas" },
   { to: "/goals", icon: Target, label: "Metas" },
   { to: "/recurrences", icon: Repeat, label: "Recorrências" },
   { to: "/import", icon: Upload, label: "Importar" },
+  { to: "/settings", icon: Settings, label: "Configurações" },
 ] as const;
 
 export function AppNav() {
