@@ -38,6 +38,7 @@ function ImportPage() {
   const [parsed, setParsed] = useState<ParsedTx[] | null>(null);
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<ParsedTx | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const categoriesQ = useQuery({ queryKey: ["categories"], queryFn: () => listCategories() });
 
   async function extractText(f: File): Promise<{ text: string; format: "ofx" | "csv" | "pdf" }> {
@@ -97,6 +98,7 @@ function ImportPage() {
       toast.success(`${r.inserted} transações importadas`);
       setParsed(null);
       setFile(null);
+      setConfirmOpen(false);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -159,11 +161,11 @@ function ImportPage() {
                 </div>
               </div>
               <Button
-                onClick={() => importM.mutate()}
+                onClick={() => setConfirmOpen(true)}
                 disabled={selectedCount === 0 || importM.isPending}
                 className="ml-auto"
               >
-                {importM.isPending ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Importando…</> : <><CheckCircle2 className="h-4 w-4 mr-1" /> Importar selecionadas</>}
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Revisar e importar
               </Button>
             </div>
             <div className="max-h-[60vh] overflow-y-auto divide-y divide-border">
