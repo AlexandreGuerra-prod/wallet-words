@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TransactionsRouteImport } from './routes/transactions'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecurrencesRouteImport } from './routes/recurrences'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImportRouteImport } from './routes/import'
@@ -20,6 +22,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
+const TransactionsRoute = TransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecurrencesRoute = RecurrencesRouteImport.update({
   id: '/recurrences',
   path: '/recurrences',
@@ -80,6 +92,8 @@ export interface FileRoutesByFullPath {
   '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/recurrences': typeof RecurrencesRoute
+  '/settings': typeof SettingsRoute
+  '/transactions': typeof TransactionsRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
 }
@@ -92,6 +106,8 @@ export interface FileRoutesByTo {
   '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/recurrences': typeof RecurrencesRoute
+  '/settings': typeof SettingsRoute
+  '/transactions': typeof TransactionsRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
 }
@@ -105,6 +121,8 @@ export interface FileRoutesById {
   '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/recurrences': typeof RecurrencesRoute
+  '/settings': typeof SettingsRoute
+  '/transactions': typeof TransactionsRoute
   '/api/chat': typeof ApiChatRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
 }
@@ -119,6 +137,8 @@ export interface FileRouteTypes {
     | '/import'
     | '/login'
     | '/recurrences'
+    | '/settings'
+    | '/transactions'
     | '/api/chat'
     | '/chat/$threadId'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +151,8 @@ export interface FileRouteTypes {
     | '/import'
     | '/login'
     | '/recurrences'
+    | '/settings'
+    | '/transactions'
     | '/api/chat'
     | '/chat/$threadId'
   id:
@@ -143,6 +165,8 @@ export interface FileRouteTypes {
     | '/import'
     | '/login'
     | '/recurrences'
+    | '/settings'
+    | '/transactions'
     | '/api/chat'
     | '/chat/$threadId'
   fileRoutesById: FileRoutesById
@@ -156,11 +180,27 @@ export interface RootRouteChildren {
   ImportRoute: typeof ImportRoute
   LoginRoute: typeof LoginRoute
   RecurrencesRoute: typeof RecurrencesRoute
+  SettingsRoute: typeof SettingsRoute
+  TransactionsRoute: typeof TransactionsRoute
   ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/transactions': {
+      id: '/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof TransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recurrences': {
       id: '/recurrences'
       path: '/recurrences'
@@ -253,6 +293,8 @@ const rootRouteChildren: RootRouteChildren = {
   ImportRoute: ImportRoute,
   LoginRoute: LoginRoute,
   RecurrencesRoute: RecurrencesRoute,
+  SettingsRoute: SettingsRoute,
+  TransactionsRoute: TransactionsRoute,
   ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport

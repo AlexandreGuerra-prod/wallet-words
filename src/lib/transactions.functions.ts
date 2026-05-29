@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
 
 export const listTransactions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -7,10 +8,10 @@ export const listTransactions = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data, error } = await supabase
       .from("transactions")
-      .select("id,type,amount,description,occurred_at,category_id,categories(name,icon)")
+      .select("id,type,amount,description,occurred_at,category_id,account_id,categories(name,icon),accounts(name,color)")
       .eq("user_id", userId)
       .order("occurred_at", { ascending: false })
-      .limit(50);
+      .limit(500);
     if (error) throw new Error(error.message);
     return data ?? [];
   });
@@ -34,4 +35,35 @@ export const summaryServerFn = createServerFn({ method: "GET" })
       else if (t.type === "expense") expense += v;
     }
     return { income, expense, balance: income - expense };
+  });
+
+export const updateTransaction = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      type: z.enum(["income", "expense", "transfer"]).optional(),
+      amount: z.number().positive().optional(),
+      description: z.string().min(1).max(200).optional(),
+      occurred_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      category_id: z.string().uuid().nullable().optional(),
+      account_id: z.string().uuid().nullable().optional(),
+    }).parse(i),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { id, ...patch } = data;
+    const { error } = await supabase.from("transactions").update(patch).eq("id", id).eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteTransaction = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ id: z.string().uuid() }).parse(i))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase.from("transactions").delete().eq("id", data.id).eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
