@@ -60,7 +60,15 @@ function ReportsPage() {
   const d = q.data;
 
   return (
-    <AppShell title="Relatórios" subtitle="Filtre por período, compare receitas e despesas e exporte os dados.">
+    <AppShell
+      title="Relatórios"
+      subtitle="Filtre por período, compare receitas e despesas e exporte os dados."
+      action={
+        <Button variant="outline" size="sm" onClick={() => window.print()} aria-label="Imprimir">
+          <Printer className="h-4 w-4 mr-2" /> Imprimir
+        </Button>
+      }
+    >
       <div className="flex flex-wrap items-end gap-3 mb-6">
         <div>
           <Label className="text-xs">De</Label>
