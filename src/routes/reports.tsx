@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatBRL } from "@/lib/format";
-import { Download, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { Download, TrendingUp, TrendingDown, Wallet, Printer } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from "recharts";
@@ -60,7 +60,15 @@ function ReportsPage() {
   const d = q.data;
 
   return (
-    <AppShell title="Relatórios" subtitle="Filtre por período, compare receitas e despesas e exporte os dados.">
+    <AppShell
+      title="Relatórios"
+      subtitle="Filtre por período, compare receitas e despesas e exporte os dados."
+      action={
+        <Button variant="outline" size="sm" onClick={() => window.print()} aria-label="Imprimir">
+          <Printer className="h-4 w-4 mr-2" /> Imprimir
+        </Button>
+      }
+    >
       <div className="flex flex-wrap items-end gap-3 mb-6">
         <div>
           <Label className="text-xs">De</Label>

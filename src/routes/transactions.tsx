@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { listTransactions, updateTransaction, deleteTransaction, deleteTransactionsBulk } from "@/lib/transactions.functions";
 import { listCategories, createCategory, deleteCategory } from "@/lib/categories.functions";
 import { listAccounts } from "@/lib/accounts.functions";
-import { Pencil, Trash2, Plus, Search } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, Printer } from "lucide-react";
 import { formatBRL } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -137,7 +137,15 @@ function TransactionsPage() {
   });
 
   return (
-    <AppShell title="Lançamentos" subtitle="Veja, edite ou remova suas movimentações">
+    <AppShell
+      title="Lançamentos"
+      subtitle="Veja, edite ou remova suas movimentações"
+      action={
+        <Button variant="outline" size="sm" onClick={() => window.print()} aria-label="Imprimir">
+          <Printer className="h-4 w-4 mr-2" /> Imprimir
+        </Button>
+      }
+    >
       <div className="space-y-8">
         <section>
           <div className="flex flex-wrap items-end gap-3 mb-3">

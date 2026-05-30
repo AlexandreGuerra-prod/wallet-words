@@ -93,3 +93,10 @@
 .glow {
   box-shadow: 0 0 0 1px oklch(0.62 0.22 275 / 0.4), 0 10px 40px -10px oklch(0.62 0.22 275 / 0.6);
 }
+
+@media print {
+  aside, nav, header.sticky, button { display: none !important; }
+  main { overflow: visible !important; }
+  body { background: white !important; color: black !important; }
+  .no-print { display: none !important; }
+}
