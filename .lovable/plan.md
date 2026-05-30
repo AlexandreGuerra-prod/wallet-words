@@ -1,80 +1,59 @@
-# Fase 2 — Plano de implementação
+# Fase 3 — Plano
 
-Escopo aprovado: **Dashboard, Contas & Cartões, Categorias customizadas, Metas, Recorrências.**
+Escopo aprovado: **Orçamentos por categoria, Faturas de cartão, Previsão de fluxo, Relatórios/Exportação, Alertas por e-mail.**
 
 ## 1. Banco de dados (1 migração)
 
-Novas tabelas (todas com RLS `auth.uid() = user_id`):
+Novas tabelas (RLS `auth.uid() = user_id`, GRANTs para `authenticated`/`service_role`):
 
-- **`accounts`** — `name`, `type` (`checking|savings|cash|credit_card|investment`), `institution`, `color`, `closing_day` / `due_day` (cartão), `credit_limit`, `archived`.
-- **`goals`** — `name`, `target_amount`, `current_amount`, `deadline`, `category_id?`, `status`.
-- **`recurrences`** — `description`, `type` (`income|expense`), `amount`, `category_id`, `account_id`, `frequency` (`monthly|weekly|yearly`), `day_of_month`, `next_run_at`, `active`.
+- **`budgets`** — `category_id`, `month` (date, dia=1), `amount`, `alert_80_sent_at`, `alert_100_sent_at`.
+- **`credit_card_invoices`** — `account_id`, `reference_month`, `closing_date`, `due_date`, `total_amount`, `status` (`open|closed|paid`), `paid_at`.
+- Em `transactions`: adicionar `invoice_id uuid` (nullable) ligando lançamento de cartão à fatura.
 
-Alterações:
+Funções SQL:
+- `assign_transaction_to_invoice()` — trigger que, ao inserir/atualizar transação de cartão, calcula a fatura correta pelo `closing_day` e cria/atribui.
+- `forecast_cashflow(_user_id, _days)` — soma saldo atual + recorrências previstas + faturas em aberto até a data.
 
-- `transactions`: adicionar `account_id uuid → accounts(id)`, `recurrence_id uuid → recurrences(id)` (ambas nullable).
-- `categories`: já permite custom — só vamos garantir UI.
+## 2. Server functions (`src/lib/`)
 
-Função SQL `materialize_due_recurrences(user_id)` que insere transações vencidas até hoje e atualiza `next_run_at`. Chamada sob demanda quando o usuário abre o dashboard / pede resumo.
+- `budgets.functions.ts` — list (mês atual com gasto realizado vs limite), upsert, delete.
+- `invoices.functions.ts` — listByAccount, getDetail (lançamentos da fatura), markAsPaid.
+- `forecast.functions.ts` — `getCashflowForecast({ days })` → série diária de saldo projetado.
+- `reports.functions.ts` — `getReport({ from, to, groupBy })` → agregados; `exportCsv` / `exportPdf` retornando string base64.
 
-## 2. Server functions (novas em `src/lib/`)
+## 3. Telas
 
-- `accounts.functions.ts` — list / create / update / archive.
-- `goals.functions.ts` — list / create / updateProgress / delete.
-- `recurrences.functions.ts` — list / create / pause / delete / `materializeDue`.
-- `categories.functions.ts` — list (default + user) / create / delete (custom).
-- `dashboard.functions.ts` — agregados: totais mês atual, por categoria, série diária 30d, top 5 categorias, saldo por conta, progresso das metas.
+- **`/budgets`** — cards por categoria com Progress bar, cor verde/amarelo/vermelho conforme % gasto. Botão "Definir limite" abre dialog.
+- **`/invoices`** — para cada cartão, lista de faturas (mês de referência, total, status). Clicar abre detalhe com transações + botão "Marcar como paga".
+- **`/forecast`** — gráfico de linha (saldo projetado 30/60/90d) + lista de eventos futuros (recorrências, faturas a vencer).
+- **`/reports`** — filtro de período, gráficos (despesas por categoria, evolução mensal, comparativo receita/despesa), botões **Exportar CSV** e **Exportar PDF**.
 
-## 3. Ferramentas adicionais do agente Finn (em `routes/api/chat.ts`)
+Sidebar (`app-nav.tsx`) ganha 4 ícones: Orçamentos, Faturas, Previsão, Relatórios.
 
-Adicionar tools ao chat para que a IA continue conversacional:
+Dashboard atual ganha um card resumo de orçamentos (top 3 mais estourados).
 
-- `create_account`, `list_accounts`
-- `create_goal`, `update_goal_progress`, `list_goals`
-- `create_recurrence`, `list_recurrences`
-- `create_category`
-- `record_transaction` ganha campo opcional `account_name` (resolvido server-side)
+## 4. Alertas por e-mail
 
-System prompt atualizado para conhecer contas, cartões, metas e recorrências.
+- Setup de email infrastructure (`setup_email_infra` + `scaffold_transactional_email`).
+- Templates React Email: `budget-alert.tsx` (80% e 100%), `invoice-due-soon.tsx` (3 dias antes), `recurrence-due-soon.tsx`.
+- Server route `/api/public/cron/email-alerts` (verificada por header secret) chamada por pg_cron diariamente. Para cada user: checa orçamentos estourados não-notificados, faturas/recorrências vencendo em ≤3 dias, enfileira e-mails via `sendTransactionalEmail`.
+- Migration registra o job no `pg_cron` apontando para a URL estável `project--{id}.lovable.app`.
 
-## 4. Telas
+## 5. Exportação
 
-Layout do app vira **sidebar global** com navegação (substitui o painel atual só de threads). Sidebar colapsável (`shadcn/ui sidebar`) com:
-- 💬 Chat (mantém sub-lista de threads)
-- 📊 Dashboard
-- 🏦 Contas & Cartões
-- 🎯 Metas
-- 🔁 Recorrências
+- **CSV**: gerado server-side com `papaparse` (já vem), download via blob no cliente.
+- **PDF**: `pdf-lib` (puro JS, compatível com Worker) gera relatório com KPIs + tabela.
 
-Rotas novas:
+## 6. Bibliotecas a adicionar
 
-- `/dashboard` — KPIs (receitas, despesas, saldo), gráfico de evolução (line), barras por categoria, donut top 5, lista das últimas transações, mini-cards das metas.
-- `/accounts` — lista + dialog de criação (form com tipo, cor, dados de cartão quando aplicável). Cada conta mostra saldo calculado.
-- `/goals` — cards de metas com progresso (Progress bar), CTA "Adicionar valor".
-- `/recurrences` — tabela com próximas execuções, botão pausar/excluir.
+`pdf-lib`, `papaparse`, `date-fns` (provavelmente já presente). React Email já entra com o scaffold.
 
-`chat.$threadId.tsx` mantido, sidebar lateral de threads passa a ser um sub-painel só na rota de chat.
+## 7. Ordem de entrega
 
-Charts: **recharts** (já comum em shadcn). Adicionar via `bun add recharts`.
+1. Migração (budgets + invoices + invoice_id em transactions + trigger + forecast)
+2. Server functions
+3. Telas Orçamentos, Faturas, Previsão, Relatórios + sidebar
+4. Setup de email + templates + cron de alertas
+5. QA visual e funcional
 
-## 5. UX & detalhes
-
-- Toda criação/edição com `toast` (sonner já no projeto).
-- Form validation com `react-hook-form` + zod.
-- Cores das contas/categorias reaproveitadas nos gráficos.
-- Manter tema **Midnight Indigo**; gráficos usam tokens semânticos (`--primary`, `--accent`, `--chart-*`).
-
-## 6. Entrega incremental
-
-Vou executar em uma sequência única, mas em commits lógicos visíveis pelas tarefas:
-
-1. Migração (tabelas + função SQL + colunas em transactions)
-2. Server functions + tools do chat
-3. Sidebar global + rotas placeholders
-4. Tela Contas & Cartões
-5. Tela Metas
-6. Tela Recorrências
-7. Dashboard com gráficos
-8. Validação end-to-end
-
-Aprovar para eu seguir?
+Aprovo prosseguir?
