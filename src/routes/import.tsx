@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/require-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
@@ -16,6 +17,7 @@ import { toast } from "sonner";
 import { formatBRL } from "@/lib/format";
 
 export const Route = createFileRoute("/import")({
+  beforeLoad: requireAuth,
   component: ImportPage,
   head: () => ({ meta: [{ title: "Importar extrato — Finn" }] }),
 });

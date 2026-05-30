@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/require-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { getDashboard } from "@/lib/dashboard.functions";
@@ -15,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/dashboard")({
+  beforeLoad: requireAuth,
   component: DashboardPage,
   head: () => ({ meta: [{ title: "Dashboard — Finn" }] }),
 });
