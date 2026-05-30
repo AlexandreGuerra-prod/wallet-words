@@ -67,3 +67,13 @@ export const deleteTransaction = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const deleteTransactionsBulk = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => z.object({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(i))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase.from("transactions").delete().in("id", data.ids).eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true, count: data.ids.length };
+  });
