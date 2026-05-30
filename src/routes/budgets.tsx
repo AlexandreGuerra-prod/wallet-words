@@ -106,7 +106,7 @@ function BudgetsPage() {
       )}
       <div className="grid gap-3 md:grid-cols-2">
         {data?.items.map((b) => {
-          const color =
+          const colorClass =
             b.pct >= 100 ? "bg-destructive" : b.pct >= 80 ? "bg-yellow-500" : "bg-primary";
           const remaining = b.amount - b.spent;
           return (
@@ -117,7 +117,9 @@ function BudgetsPage() {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-              <Progress value={Math.min(100, b.pct)} className="h-2" indicatorClassName={color} />
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className={`h-full ${colorClass} transition-all`} style={{ width: `${Math.min(100, b.pct)}%` }} />
+              </div>
               <div className="flex justify-between text-sm mt-2">
                 <span className="text-muted-foreground">
                   {formatBRL(b.spent)} / {formatBRL(b.amount)}

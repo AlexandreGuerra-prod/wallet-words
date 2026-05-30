@@ -60,8 +60,8 @@ function ForecastPage() {
                   <XAxis dataKey="day" tickFormatter={(v) => formatDate(v).slice(0, 5)} fontSize={11} />
                   <YAxis tickFormatter={(v) => formatBRL(Number(v))} fontSize={11} width={90} />
                   <Tooltip
-                    formatter={(v: number) => formatBRL(v)}
-                    labelFormatter={(l) => formatDate(l)}
+                    formatter={(v) => formatBRL(Number(v))}
+                    labelFormatter={(l) => formatDate(l as string)}
                     contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))" }}
                   />
                   <Area type="monotone" dataKey="projected_balance" stroke="#6366f1" fill="url(#bal)" strokeWidth={2} />

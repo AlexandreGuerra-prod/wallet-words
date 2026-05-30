@@ -93,7 +93,7 @@ function ReportsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" fontSize={11} />
                   <YAxis tickFormatter={(v) => formatBRL(Number(v))} fontSize={11} width={90} />
-                  <Tooltip formatter={(v: number) => formatBRL(v)} contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))" }} />
+                  <Tooltip formatter={(v) => formatBRL(Number(v))} contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))" }} />
                   <Legend />
                   <Bar dataKey="income" name="Receita" fill="#10b981" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expense" name="Despesa" fill="#ef4444" radius={[4, 4, 0, 0]} />
