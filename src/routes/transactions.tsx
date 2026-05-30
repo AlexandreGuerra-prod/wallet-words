@@ -5,9 +5,10 @@ import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { listTransactions, updateTransaction, deleteTransaction } from "@/lib/transactions.functions";
+import { listTransactions, updateTransaction, deleteTransaction, deleteTransactionsBulk } from "@/lib/transactions.functions";
 import { listCategories, createCategory, deleteCategory } from "@/lib/categories.functions";
 import { listAccounts } from "@/lib/accounts.functions";
 import { Pencil, Trash2, Plus, Search } from "lucide-react";
@@ -29,65 +30,101 @@ type Draft = {
   account_id: string | null;
 };
 
+type AccountKind = "all" | "credit_card" | "non_credit";
+
+const MONTHS = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
 function TransactionsPage() {
   const qc = useQueryClient();
   const txs = useQuery({ queryKey: ["transactions", "all"], queryFn: () => listTransactions() });
   const cats = useQuery({ queryKey: ["categories"], queryFn: () => listCategories() });
   const accs = useQuery({ queryKey: ["accounts"], queryFn: () => listAccounts() });
 
+  const now = new Date();
   const [search, setSearch] = useState("");
+  const [month, setMonth] = useState<string>(String(now.getMonth() + 1));
+  const [year, setYear] = useState<string>(String(now.getFullYear()));
+  const [kind, setKind] = useState<AccountKind>("all");
   const [edit, setEdit] = useState<Draft | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [newCat, setNewCat] = useState("");
   const [newIcon, setNewIcon] = useState("");
+
+  const years = useMemo(() => {
+    const set = new Set<number>();
+    set.add(now.getFullYear());
+    for (const t of txs.data ?? []) set.add(new Date(t.occurred_at).getFullYear());
+    return Array.from(set).sort((a, b) => b - a);
+  }, [txs.data, now]);
 
   const filtered = useMemo(() => {
     if (!txs.data) return [];
     const s = search.toLowerCase().trim();
-    if (!s) return txs.data;
-    return txs.data.filter((t) => t.description.toLowerCase().includes(s));
-  }, [txs.data, search]);
+    return txs.data.filter((t) => {
+      if (s && !t.description.toLowerCase().includes(s)) return false;
+      const d = new Date(t.occurred_at + "T00:00:00");
+      if (year !== "all" && d.getFullYear() !== Number(year)) return false;
+      if (month !== "all" && d.getMonth() + 1 !== Number(month)) return false;
+      const accType = (t as { accounts?: { type?: string } | null }).accounts?.type;
+      if (kind === "credit_card" && accType !== "credit_card") return false;
+      if (kind === "non_credit" && accType === "credit_card") return false;
+      return true;
+    });
+  }, [txs.data, search, month, year, kind]);
+
+  const filteredIds = useMemo(() => filtered.map((t) => t.id), [filtered]);
+  const allSelected = filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
+  const someSelected = filteredIds.some((id) => selected.has(id));
+
+  const toggleAll = (checked: boolean) => {
+    const next = new Set(selected);
+    if (checked) filteredIds.forEach((id) => next.add(id));
+    else filteredIds.forEach((id) => next.delete(id));
+    setSelected(next);
+  };
+
+  const toggleOne = (id: string, checked: boolean) => {
+    const next = new Set(selected);
+    if (checked) next.add(id); else next.delete(id);
+    setSelected(next);
+  };
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["transactions"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.invalidateQueries({ queryKey: ["accounts"] });
+  };
 
   const upd = useMutation({
     mutationFn: (d: Draft) =>
       updateTransaction({
         data: {
-          id: d.id,
-          type: d.type,
-          amount: d.amount,
-          description: d.description,
-          occurred_at: d.occurred_at,
-          category_id: d.category_id,
-          account_id: d.account_id,
+          id: d.id, type: d.type, amount: d.amount, description: d.description,
+          occurred_at: d.occurred_at, category_id: d.category_id, account_id: d.account_id,
         },
       }),
-    onSuccess: () => {
-      toast.success("Lançamento atualizado");
-      setEdit(null);
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
-    },
+    onSuccess: () => { toast.success("Lançamento atualizado"); setEdit(null); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const del = useMutation({
     mutationFn: (id: string) => deleteTransaction({ data: { id } }),
-    onSuccess: () => {
-      toast.success("Lançamento removido");
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
-    },
+    onSuccess: () => { toast.success("Lançamento removido"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const bulkDel = useMutation({
+    mutationFn: (ids: string[]) => deleteTransactionsBulk({ data: { ids } }),
+    onSuccess: (r) => { toast.success(`${r.count} lançamento(s) removido(s)`); setSelected(new Set()); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const addCat = useMutation({
     mutationFn: () => createCategory({ data: { name: newCat.trim(), icon: newIcon.trim() || null } }),
-    onSuccess: () => {
-      toast.success("Categoria criada");
-      setNewCat(""); setNewIcon("");
-      qc.invalidateQueries({ queryKey: ["categories"] });
-    },
+    onSuccess: () => { toast.success("Categoria criada"); setNewCat(""); setNewIcon(""); qc.invalidateQueries({ queryKey: ["categories"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -101,12 +138,60 @@ function TransactionsPage() {
     <AppShell title="Lançamentos" subtitle="Veja, edite ou remova suas movimentações">
       <div className="space-y-8">
         <section>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-wrap items-end gap-3 mb-3">
+            <div className="relative flex-1 min-w-[180px] max-w-sm">
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar descrição…" className="pl-9" />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Mês</Label>
+              <Select value={month} onValueChange={setMonth}>
+                <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {MONTHS.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Ano</Label>
+              <Select value={year} onValueChange={setYear}>
+                <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Origem</Label>
+              <Select value={kind} onValueChange={(v) => setKind(v as AccountKind)}>
+                <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="credit_card">Cartão de crédito</SelectItem>
+                  <SelectItem value="non_credit">Conta (não-cartão)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mb-2 px-1">
             <div className="text-sm text-muted-foreground">{filtered.length} lançamento(s)</div>
+            {someSelected && (
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={bulkDel.isPending}
+                onClick={() => {
+                  const ids = filteredIds.filter((id) => selected.has(id));
+                  if (ids.length && confirm(`Remover ${ids.length} lançamento(s)?`)) bulkDel.mutate(ids);
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Excluir selecionados ({filteredIds.filter((id) => selected.has(id)).length})
+              </Button>
+            )}
           </div>
 
           <div className="rounded-xl border border-border overflow-hidden">
@@ -115,50 +200,63 @@ function TransactionsPage() {
             ) : filtered.length === 0 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">Nenhum lançamento.</div>
             ) : (
-              <ul className="divide-y divide-border">
-                {filtered.map((t) => {
-                  const cat = (t as { categories?: { name: string; icon: string | null } | null }).categories;
-                  const acc = (t as { accounts?: { name: string; color: string } | null }).accounts;
-                  return (
-                    <li key={t.id} className="flex items-center gap-3 px-4 py-3 hover:bg-accent/30">
-                      <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center text-base">
-                        {cat?.icon ?? (t.type === "income" ? "💰" : t.type === "expense" ? "💳" : "🔁")}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{t.description}</div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {t.occurred_at} · {cat?.name ?? "Sem categoria"}{acc ? ` · ${acc.name}` : ""}
+              <>
+                <div className="flex items-center gap-3 px-4 py-2 bg-muted/40 border-b border-border text-xs text-muted-foreground">
+                  <Checkbox checked={allSelected} onCheckedChange={(v) => toggleAll(!!v)} aria-label="Selecionar todos" />
+                  <span>Selecionar todos visíveis</span>
+                </div>
+                <ul className="divide-y divide-border">
+                  {filtered.map((t) => {
+                    const cat = (t as { categories?: { name: string; icon: string | null } | null }).categories;
+                    const acc = (t as { accounts?: { name: string; color: string; type?: string } | null }).accounts;
+                    const isCC = acc?.type === "credit_card";
+                    return (
+                      <li key={t.id} className="flex items-center gap-3 px-4 py-3 hover:bg-accent/30">
+                        <Checkbox
+                          checked={selected.has(t.id)}
+                          onCheckedChange={(v) => toggleOne(t.id, !!v)}
+                          aria-label="Selecionar lançamento"
+                        />
+                        <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center text-base">
+                          {cat?.icon ?? (t.type === "income" ? "💰" : t.type === "expense" ? "💳" : "🔁")}
                         </div>
-                      </div>
-                      <div className={`tabular-nums font-medium ${t.type === "income" ? "text-emerald-500" : t.type === "expense" ? "text-rose-500" : ""}`}>
-                        {t.type === "expense" ? "-" : t.type === "income" ? "+" : ""}{formatBRL(Number(t.amount))}
-                      </div>
-                      <button
-                        onClick={() => setEdit({
-                          id: t.id,
-                          type: t.type as Draft["type"],
-                          amount: Number(t.amount),
-                          description: t.description,
-                          occurred_at: t.occurred_at,
-                          category_id: t.category_id,
-                          account_id: (t as { account_id: string | null }).account_id,
-                        })}
-                        className="p-1.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
-                        aria-label="Editar"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => { if (confirm("Remover este lançamento?")) del.mutate(t.id); }}
-                        className="p-1.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
-                        aria-label="Excluir"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium truncate">{t.description}</div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {t.occurred_at} · {cat?.name ?? "Sem categoria"}
+                            {acc ? ` · ${acc.name}${isCC ? " (cartão)" : ""}` : ""}
+                          </div>
+                        </div>
+                        <div className={`tabular-nums font-medium ${t.type === "income" ? "text-emerald-500" : t.type === "expense" ? "text-rose-500" : ""}`}>
+                          {t.type === "expense" ? "-" : t.type === "income" ? "+" : ""}{formatBRL(Number(t.amount))}
+                        </div>
+                        <button
+                          onClick={() => setEdit({
+                            id: t.id,
+                            type: t.type as Draft["type"],
+                            amount: Number(t.amount),
+                            description: t.description,
+                            occurred_at: t.occurred_at,
+                            category_id: t.category_id,
+                            account_id: (t as { account_id: string | null }).account_id,
+                          })}
+                          className="p-1.5 rounded hover:bg-accent text-muted-foreground hover:text-foreground"
+                          aria-label="Editar"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => { if (confirm("Remover este lançamento?")) del.mutate(t.id); }}
+                          className="p-1.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive"
+                          aria-label="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
             )}
           </div>
         </section>
