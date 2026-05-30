@@ -56,6 +56,42 @@ export type Database = {
         }
         Relationships: []
       }
+      budgets: {
+        Row: {
+          alert_100_sent_at: string | null
+          alert_80_sent_at: string | null
+          amount: number
+          category_id: string
+          created_at: string
+          id: string
+          month: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_100_sent_at?: string | null
+          alert_80_sent_at?: string | null
+          amount: number
+          category_id: string
+          created_at?: string
+          id?: string
+          month: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_100_sent_at?: string | null
+          alert_80_sent_at?: string | null
+          amount?: number
+          category_id?: string
+          created_at?: string
+          id?: string
+          month?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -80,6 +116,48 @@ export type Database = {
           is_default?: boolean
           name?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      credit_card_invoices: {
+        Row: {
+          account_id: string
+          closing_date: string
+          created_at: string
+          due_date: string
+          id: string
+          paid_at: string | null
+          reference_month: string
+          status: Database["public"]["Enums"]["invoice_status"]
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          closing_date: string
+          created_at?: string
+          due_date: string
+          id?: string
+          paid_at?: string | null
+          reference_month: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          closing_date?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          paid_at?: string | null
+          reference_month?: string
+          status?: Database["public"]["Enums"]["invoice_status"]
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -275,6 +353,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          invoice_id: string | null
           occurred_at: string
           recurrence_id: string | null
           source: string
@@ -288,6 +367,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          invoice_id?: string | null
           occurred_at?: string
           recurrence_id?: string | null
           source?: string
@@ -301,6 +381,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          invoice_id?: string | null
           occurred_at?: string
           recurrence_id?: string | null
           source?: string
@@ -336,9 +417,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      forecast_cashflow: {
+        Args: { _days: number; _user_id: string }
+        Returns: {
+          day: string
+          projected_balance: number
+        }[]
+      }
       materialize_due_recurrences: {
         Args: { _user_id: string }
         Returns: number
+      }
+      recompute_invoice_total: {
+        Args: { _invoice_id: string }
+        Returns: undefined
       }
     }
     Enums: {
@@ -349,6 +441,7 @@ export type Database = {
         | "credit_card"
         | "investment"
       goal_status: "active" | "completed" | "archived"
+      invoice_status: "open" | "closed" | "paid"
       recurrence_frequency: "weekly" | "monthly" | "yearly"
       tx_type: "income" | "expense" | "transfer"
     }
@@ -486,6 +579,7 @@ export const Constants = {
         "investment",
       ],
       goal_status: ["active", "completed", "archived"],
+      invoice_status: ["open", "closed", "paid"],
       recurrence_frequency: ["weekly", "monthly", "yearly"],
       tx_type: ["income", "expense", "transfer"],
     },
