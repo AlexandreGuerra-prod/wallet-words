@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/require-auth";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
+  beforeLoad: requireAuth,
   component: SettingsPage,
   head: () => ({ meta: [{ title: "Configurações — Finn" }] }),
 });

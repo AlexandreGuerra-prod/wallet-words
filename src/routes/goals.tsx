@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuth } from "@/lib/require-auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { listGoals, createGoal, addGoalProgress, deleteGoal } from "@/lib/goals.functions";
@@ -13,6 +14,7 @@ import { formatBRL, formatDate } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/goals")({
+  beforeLoad: requireAuth,
   component: GoalsPage,
   head: () => ({ meta: [{ title: "Metas — Finn" }] }),
 });
