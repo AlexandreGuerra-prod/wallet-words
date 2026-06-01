@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { MessageCircle, LayoutDashboard, Wallet, Target, Repeat, Upload, LogOut, Sparkles, ListChecks, Settings, PiggyBank, CreditCard, TrendingUp, FileBarChart } from "lucide-react";
+import { MessageCircle, LayoutDashboard, Wallet, Target, Repeat, Upload, LogOut, Sparkles, ListChecks, Settings, PiggyBank, CreditCard, TrendingUp, FileBarChart, Layers } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const items = [
@@ -9,6 +9,7 @@ const items = [
   { to: "/accounts", icon: Wallet, label: "Contas" },
   { to: "/budgets", icon: PiggyBank, label: "Orçamentos" },
   { to: "/invoices", icon: CreditCard, label: "Faturas" },
+  { to: "/installments", icon: Layers, label: "Parcelas" },
   { to: "/forecast", icon: TrendingUp, label: "Previsão" },
   { to: "/reports", icon: FileBarChart, label: "Relatórios" },
   { to: "/goals", icon: Target, label: "Metas" },
