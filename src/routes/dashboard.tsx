@@ -292,7 +292,7 @@ function FixedVsVariable({ fixed, variable }: { fixed: number; variable: number 
         </div>
         <div className="rounded-lg bg-card/40 border border-border p-3">
           <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground">
-            <Shuffle className="h-3.5 w-3.5 text-warning" /> Variáveis
+            <Shuffle className="h-3.5 w-3.5 text-[#f59e0b]" /> Variáveis
           </div>
           <div className="mt-1 text-xl font-display font-semibold tabular-nums">{formatBRL(variable)}</div>
           <div className="text-xs text-muted-foreground">{variablePct.toFixed(1)}% · gastos pontuais</div>
@@ -300,7 +300,7 @@ function FixedVsVariable({ fixed, variable }: { fixed: number; variable: number 
       </div>
       <div className="h-2 w-full rounded-full overflow-hidden bg-card/40 border border-border flex">
         <div className="h-full bg-primary" style={{ width: `${fixedPct}%` }} />
-        <div className="h-full bg-warning" style={{ width: `${variablePct}%` }} />
+        <div className="h-full bg-[#f59e0b]" style={{ width: `${variablePct}%` }} />
       </div>
       <p className="text-xs text-muted-foreground">
         Despesas <span className="text-foreground font-medium">fixas</span> são lançamentos vinculados a uma recorrência (luz, condomínio, IPTU, financiamento, etc).
