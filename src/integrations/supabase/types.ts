@@ -208,6 +208,92 @@ export type Database = {
           },
         ]
       }
+      installment_items: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          number: number
+          paid: boolean
+          paid_at: string | null
+          purchase_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          number: number
+          paid?: boolean
+          paid_at?: string | null
+          purchase_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          number?: number
+          paid?: boolean
+          paid_at?: string | null
+          purchase_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installment_items_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "installment_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      installment_purchases: {
+        Row: {
+          account_id: string | null
+          category_id: string | null
+          created_at: string
+          description: string
+          first_due_date: string
+          id: string
+          installments_count: number
+          notes: string | null
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description: string
+          first_due_date: string
+          id?: string
+          installments_count: number
+          notes?: string | null
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          first_due_date?: string
+          id?: string
+          installments_count?: number
+          notes?: string | null
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           created_at: string
