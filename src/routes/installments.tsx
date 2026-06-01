@@ -77,8 +77,18 @@ function InstallmentsPage() {
 
   const invalidateAll = () => qc.invalidateQueries({ queryKey: ["installments"] });
 
+  type PurchaseInput = {
+    description: string;
+    total_amount: number;
+    installments_count: number;
+    first_due_date: string;
+    account_id: string | null;
+    category_id: string | null;
+    notes: string | null;
+  };
+
   const createM = useMutation({
-    mutationFn: (v: Parameters<typeof createInstallmentPurchase>[0]["data"]) => createInstallmentPurchase({ data: v }),
+    mutationFn: (v: PurchaseInput) => createInstallmentPurchase({ data: v }),
     onSuccess: () => {
       toast.success("Compra parcelada criada");
       setCreateOpen(false);
@@ -88,7 +98,7 @@ function InstallmentsPage() {
   });
 
   const updateM = useMutation({
-    mutationFn: (v: Parameters<typeof updateInstallmentPurchase>[0]["data"]) => updateInstallmentPurchase({ data: v }),
+    mutationFn: (v: PurchaseInput & { id: string; regenerate?: boolean }) => updateInstallmentPurchase({ data: v }),
     onSuccess: () => {
       toast.success("Atualizado");
       setEditing(null);
