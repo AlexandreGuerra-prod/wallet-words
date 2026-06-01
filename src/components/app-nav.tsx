@@ -9,6 +9,7 @@ const items = [
   { to: "/accounts", icon: Wallet, label: "Contas" },
   { to: "/budgets", icon: PiggyBank, label: "Orçamentos" },
   { to: "/invoices", icon: CreditCard, label: "Faturas" },
+  { to: "/installments", icon: Layers, label: "Parcelas" },
   { to: "/forecast", icon: TrendingUp, label: "Previsão" },
   { to: "/reports", icon: FileBarChart, label: "Relatórios" },
   { to: "/goals", icon: Target, label: "Metas" },
