@@ -72,29 +72,34 @@ export const getDashboard = createServerFn({ method: "GET" })
       resolvedAccountIds = filtered.map((a) => a.id);
     }
 
-    const applyFilters = <T extends { gte: (c: string, v: string) => T; lte: (c: string, v: string) => T; in: (c: string, v: string[]) => T; eq: (c: string, v: string) => T }>(q: T) => {
+    const acctIds = resolvedAccountIds;
+    const baseTx = () => {
+      let q = supabase.from("transactions").select("type,amount,recurrence_id,categories(name,icon)").eq("user_id", userId);
       if (periodStart) q = q.gte("occurred_at", periodStart);
       if (periodEnd) q = q.lte("occurred_at", periodEnd);
-      if (resolvedAccountIds) {
-        if (resolvedAccountIds.length === 0) q = q.in("account_id", ["00000000-0000-0000-0000-000000000000"]);
-        else q = q.in("account_id", resolvedAccountIds);
-      }
+      if (acctIds) q = q.in("account_id", acctIds.length ? acctIds : ["00000000-0000-0000-0000-000000000000"]);
       if (categoryId) q = q.eq("category_id", categoryId);
       return q;
     };
-
-    const baseTx = () => applyFilters(
-      supabase.from("transactions").select("type,amount,recurrence_id,categories(name,icon)").eq("user_id", userId),
-    );
-    const baseSeries = () => applyFilters(
-      supabase.from("transactions").select("type,amount,occurred_at").eq("user_id", userId),
-    ).order("occurred_at", { ascending: true });
-    const baseRecent = () => applyFilters(
-      supabase
+    const baseSeries = () => {
+      let q = supabase.from("transactions").select("type,amount,occurred_at").eq("user_id", userId);
+      if (periodStart) q = q.gte("occurred_at", periodStart);
+      if (periodEnd) q = q.lte("occurred_at", periodEnd);
+      if (acctIds) q = q.in("account_id", acctIds.length ? acctIds : ["00000000-0000-0000-0000-000000000000"]);
+      if (categoryId) q = q.eq("category_id", categoryId);
+      return q.order("occurred_at", { ascending: true });
+    };
+    const baseRecent = () => {
+      let q = supabase
         .from("transactions")
         .select("id,type,amount,description,occurred_at,categories(name,icon)")
-        .eq("user_id", userId),
-    ).order("occurred_at", { ascending: false }).order("created_at", { ascending: false }).limit(10);
+        .eq("user_id", userId);
+      if (periodStart) q = q.gte("occurred_at", periodStart);
+      if (periodEnd) q = q.lte("occurred_at", periodEnd);
+      if (acctIds) q = q.in("account_id", acctIds.length ? acctIds : ["00000000-0000-0000-0000-000000000000"]);
+      if (categoryId) q = q.eq("category_id", categoryId);
+      return q.order("occurred_at", { ascending: false }).order("created_at", { ascending: false }).limit(10);
+    };
 
     // Installment items for the period (unpaid → committed)
     let instQ = supabase
