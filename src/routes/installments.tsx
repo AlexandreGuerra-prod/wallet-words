@@ -233,7 +233,7 @@ function InstallmentsPage() {
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <Tooltip
                   contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 6 }}
-                  formatter={(v: number) => formatBRL(v)}
+                  formatter={(v) => formatBRL(Number(v))}
                 />
                 <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
               </BarChart>
