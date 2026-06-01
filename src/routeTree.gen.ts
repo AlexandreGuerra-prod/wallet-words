@@ -16,6 +16,7 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as RecurrencesRouteImport } from './routes/recurrences'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InvoicesRouteImport } from './routes/invoices'
+import { Route as InstallmentsRouteImport } from './routes/installments'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as ForecastRouteImport } from './routes/forecast'
@@ -60,6 +61,11 @@ const LoginRoute = LoginRouteImport.update({
 const InvoicesRoute = InvoicesRouteImport.update({
   id: '/invoices',
   path: '/invoices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstallmentsRoute = InstallmentsRouteImport.update({
+  id: '/installments',
+  path: '/installments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImportRoute = ImportRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/forecast': typeof ForecastRoute
   '/goals': typeof GoalsRoute
   '/import': typeof ImportRoute
+  '/installments': typeof InstallmentsRoute
   '/invoices': typeof InvoicesRoute
   '/login': typeof LoginRoute
   '/recurrences': typeof RecurrencesRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/forecast': typeof ForecastRoute
   '/goals': typeof GoalsRoute
   '/import': typeof ImportRoute
+  '/installments': typeof InstallmentsRoute
   '/invoices': typeof InvoicesRoute
   '/login': typeof LoginRoute
   '/recurrences': typeof RecurrencesRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/forecast': typeof ForecastRoute
   '/goals': typeof GoalsRoute
   '/import': typeof ImportRoute
+  '/installments': typeof InstallmentsRoute
   '/invoices': typeof InvoicesRoute
   '/login': typeof LoginRoute
   '/recurrences': typeof RecurrencesRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/forecast'
     | '/goals'
     | '/import'
+    | '/installments'
     | '/invoices'
     | '/login'
     | '/recurrences'
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/forecast'
     | '/goals'
     | '/import'
+    | '/installments'
     | '/invoices'
     | '/login'
     | '/recurrences'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/forecast'
     | '/goals'
     | '/import'
+    | '/installments'
     | '/invoices'
     | '/login'
     | '/recurrences'
@@ -240,6 +252,7 @@ export interface RootRouteChildren {
   ForecastRoute: typeof ForecastRoute
   GoalsRoute: typeof GoalsRoute
   ImportRoute: typeof ImportRoute
+  InstallmentsRoute: typeof InstallmentsRoute
   InvoicesRoute: typeof InvoicesRoute
   LoginRoute: typeof LoginRoute
   RecurrencesRoute: typeof RecurrencesRoute
@@ -299,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/invoices'
       fullPath: '/invoices'
       preLoaderRoute: typeof InvoicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/installments': {
+      id: '/installments'
+      path: '/installments'
+      fullPath: '/installments'
+      preLoaderRoute: typeof InstallmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/import': {
@@ -393,6 +413,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForecastRoute: ForecastRoute,
   GoalsRoute: GoalsRoute,
   ImportRoute: ImportRoute,
+  InstallmentsRoute: InstallmentsRoute,
   InvoicesRoute: InvoicesRoute,
   LoginRoute: LoginRoute,
   RecurrencesRoute: RecurrencesRoute,
@@ -405,3 +426,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
