@@ -18,12 +18,13 @@ const items = [
   { to: "/settings", icon: Settings, label: "Configurações" },
 ] as const;
 
+/** Compact icon-rail used on tablet/desktop (md+). */
 export function AppNav() {
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <nav className="w-16 shrink-0 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-3 gap-1">
+    <nav className="hidden md:flex w-16 shrink-0 bg-sidebar border-r border-sidebar-border flex-col items-center py-3 gap-1">
       <Link
         to="/chat"
         className="h-10 w-10 rounded-lg bg-primary glow flex items-center justify-center mb-2"
@@ -61,5 +62,54 @@ export function AppNav() {
         <LogOut className="h-4 w-4" />
       </button>
     </nav>
+  );
+}
+
+/** Full-label list used inside the mobile drawer. */
+export function AppNavList({ onNavigate }: { onNavigate?: () => void }) {
+  const navigate = useNavigate();
+  const path = useRouterState({ select: (s) => s.location.pathname });
+
+  return (
+    <div className="flex flex-col h-full py-2">
+      <Link
+        to="/chat"
+        onClick={onNavigate}
+        className="mx-2 mb-2 h-11 rounded-lg bg-primary glow flex items-center gap-3 px-3"
+      >
+        <Sparkles className="h-4 w-4 text-primary-foreground" />
+        <span className="text-sm font-medium text-primary-foreground">Finn</span>
+      </Link>
+      <div className="flex-1 overflow-y-auto px-2 space-y-0.5">
+        {items.map((it) => {
+          const active = path === it.to || path.startsWith(it.to + "/");
+          const Icon = it.icon;
+          return (
+            <Link
+              key={it.to}
+              to={it.to}
+              onClick={onNavigate}
+              className={`h-11 rounded-lg flex items-center gap-3 px-3 text-sm transition ${
+                active ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-4.5 w-4.5" />
+              <span>{it.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+      <button
+        onClick={async () => {
+          onNavigate?.();
+          await supabase.auth.signOut();
+          navigate({ to: "/login" });
+        }}
+        className="mx-2 mt-2 h-11 rounded-lg flex items-center gap-3 px-3 text-sm text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+      >
+        <LogOut className="h-4 w-4" />
+        <span>Sair</span>
+      </button>
+    </div>
   );
 }
