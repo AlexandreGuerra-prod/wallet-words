@@ -78,80 +78,107 @@ function ChatPage() {
 
   if (authed !== true) return null;
 
+  const threadsPanel = (
+    <div className="flex flex-col h-full">
+      <div className="p-4">
+        <div className="font-display font-semibold leading-none">Conversas</div>
+        <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Histórico</div>
+      </div>
+      <div className="px-3">
+        <Button onClick={() => { newThreadM.mutate(); setThreadsOpen(false); }} className="w-full justify-start gap-2" variant="secondary">
+          <Plus className="h-4 w-4" /> Nova conversa
+        </Button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
+        {threadsQ.data?.map((t) => {
+          const active = t.id === threadId;
+          return (
+            <div
+              key={t.id}
+              className={`group flex items-center gap-1 rounded-lg px-2 ${active ? "bg-accent" : "hover:bg-accent/50"}`}
+            >
+              <Link
+                to="/chat/$threadId"
+                params={{ threadId: t.id }}
+                onClick={() => setThreadsOpen(false)}
+                className="flex-1 truncate py-2 text-sm"
+              >
+                {t.title}
+              </Link>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (confirm("Excluir esta conversa?")) delThreadM.mutate(t.id);
+                }}
+                className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition"
+                aria-label="Excluir"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      {summaryQ.data && (
+        <div className="m-3 rounded-xl border border-sidebar-border bg-card/40 p-3 space-y-1.5">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Mês atual</div>
+          <div className="flex items-center gap-1.5 text-sm">
+            <TrendingUp className="h-3.5 w-3.5 text-success" />
+            <span className="text-muted-foreground">Receitas</span>
+            <span className="ml-auto tabular-nums">{formatBRL(summaryQ.data.income)}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-sm">
+            <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+            <span className="text-muted-foreground">Despesas</span>
+            <span className="ml-auto tabular-nums">{formatBRL(summaryQ.data.expense)}</span>
+          </div>
+          <div className="border-t border-sidebar-border pt-1.5 flex items-center gap-1.5 text-sm font-medium">
+            <Wallet className="h-3.5 w-3.5 text-primary" />
+            <span>Saldo</span>
+            <span className={`ml-auto tabular-nums ${summaryQ.data.balance < 0 ? "text-destructive" : ""}`}>
+              {formatBRL(summaryQ.data.balance)}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="flex h-screen overflow-hidden">
       <AppNav />
-      {/* Threads sidebar */}
-      <aside className="w-64 shrink-0 bg-sidebar/60 border-r border-sidebar-border flex flex-col">
-        <div className="p-4">
-          <div className="font-display font-semibold leading-none">Conversas</div>
-          <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Histórico</div>
-        </div>
-
-        <div className="px-3">
-          <Button onClick={() => newThreadM.mutate()} className="w-full justify-start gap-2" variant="secondary">
-            <Plus className="h-4 w-4" /> Nova conversa
-          </Button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-          {threadsQ.data?.map((t) => {
-            const active = t.id === threadId;
-            return (
-              <div
-                key={t.id}
-                className={`group flex items-center gap-1 rounded-lg px-2 ${active ? "bg-accent" : "hover:bg-accent/50"}`}
-              >
-                <Link
-                  to="/chat/$threadId"
-                  params={{ threadId: t.id }}
-                  className="flex-1 truncate py-2 text-sm"
-                >
-                  {t.title}
-                </Link>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (confirm("Excluir esta conversa?")) delThreadM.mutate(t.id);
-                  }}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition"
-                  aria-label="Excluir"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Mini summary */}
-        {summaryQ.data && (
-          <div className="m-3 rounded-xl border border-sidebar-border bg-card/40 p-3 space-y-1.5">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Mês atual</div>
-            <div className="flex items-center gap-1.5 text-sm">
-              <TrendingUp className="h-3.5 w-3.5 text-success" />
-              <span className="text-muted-foreground">Receitas</span>
-              <span className="ml-auto tabular-nums">{formatBRL(summaryQ.data.income)}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-sm">
-              <TrendingDown className="h-3.5 w-3.5 text-destructive" />
-              <span className="text-muted-foreground">Despesas</span>
-              <span className="ml-auto tabular-nums">{formatBRL(summaryQ.data.expense)}</span>
-            </div>
-            <div className="border-t border-sidebar-border pt-1.5 flex items-center gap-1.5 text-sm font-medium">
-              <Wallet className="h-3.5 w-3.5 text-primary" />
-              <span>Saldo</span>
-              <span className={`ml-auto tabular-nums ${summaryQ.data.balance < 0 ? "text-destructive" : ""}`}>
-                {formatBRL(summaryQ.data.balance)}
-              </span>
-            </div>
-          </div>
-        )}
-
+      <aside className="hidden md:flex w-64 shrink-0 bg-sidebar/60 border-r border-sidebar-border flex-col">
+        {threadsPanel}
       </aside>
 
-      {/* Chat */}
       <main className="flex-1 min-w-0 flex flex-col">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-2 px-3 py-2 border-b border-border bg-background/70 backdrop-blur">
+          <Sheet open={navOpen} onOpenChange={setNavOpen}>
+            <SheetTrigger asChild>
+              <button className="h-10 w-10 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-accent/50 hover:text-foreground" aria-label="Abrir menu">
+                <Menu className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0 bg-sidebar border-sidebar-border">
+              <SheetTitle className="sr-only">Menu</SheetTitle>
+              <AppNavList onNavigate={() => setNavOpen(false)} />
+            </SheetContent>
+          </Sheet>
+          <div className="flex-1 font-display font-semibold truncate">Finn</div>
+          <Sheet open={threadsOpen} onOpenChange={setThreadsOpen}>
+            <SheetTrigger asChild>
+              <button className="h-10 w-10 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-accent/50 hover:text-foreground" aria-label="Conversas">
+                <MessagesSquare className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80 p-0 bg-sidebar/95 border-sidebar-border">
+              <SheetTitle className="sr-only">Conversas</SheetTitle>
+              {threadsPanel}
+            </SheetContent>
+          </Sheet>
+        </div>
+
         {initialQ.data && (
           <ChatWindow
             key={threadId}
@@ -167,6 +194,7 @@ function ChatPage() {
     </div>
   );
 }
+
 
 function ChatWindow({
   threadId,
