@@ -27,9 +27,11 @@ export const Route = createFileRoute("/chat/$threadId")({
 function ChatPage() {
   const { threadId } = Route.useParams();
   const navigate = useNavigate();
-  
+
   const qc = useQueryClient();
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [navOpen, setNavOpen] = useState(false);
+  const [threadsOpen, setThreadsOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -37,6 +39,7 @@ function ChatPage() {
       else setAuthed(true);
     });
   }, [navigate]);
+
 
   const threadsQ = useQuery({
     queryKey: ["threads"],
