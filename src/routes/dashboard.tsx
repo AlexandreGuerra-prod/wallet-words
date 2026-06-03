@@ -147,7 +147,8 @@ function DashboardPage() {
               {d.series.length === 0 ? (
                 <Empty text="Sem movimentações no período" />
               ) : (
-                <div className="h-64">
+                <div className="h-48 sm:h-64 -ml-2 sm:ml-0">
+
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={d.series} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                       <defs>
@@ -181,11 +182,11 @@ function DashboardPage() {
                 {d.byCategory.length === 0 ? (
                   <Empty text="Sem despesas no período" />
                 ) : (
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     <ResponsiveContainer>
-                      <BarChart data={d.byCategory} layout="vertical" margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
-                        <XAxis type="number" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} />
-                        <YAxis type="category" dataKey="name" tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }} width={100} />
+                      <BarChart data={d.byCategory} layout="vertical" margin={{ left: 0, right: 16, top: 8, bottom: 8 }}>
+                        <XAxis type="number" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }} />
+                        <YAxis type="category" dataKey="name" tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11 }} width={80} />
                         <Tooltip content={<TooltipBox />} />
                         <Bar dataKey="amount" fill="#6366f1" radius={[0, 6, 6, 0]} />
                       </BarChart>
@@ -198,7 +199,7 @@ function DashboardPage() {
                 {d.byCategory.length === 0 ? (
                   <Empty text="Sem dados" />
                 ) : (
-                  <div className="h-64">
+                  <div className="h-56 sm:h-64">
                     <ResponsiveContainer>
                       <PieChart>
                         <Pie data={d.byCategory.slice(0, 5)} dataKey="amount" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={2}>
