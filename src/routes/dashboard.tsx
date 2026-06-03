@@ -130,7 +130,7 @@ function DashboardPage() {
         ) : (
           <>
             {/* KPIs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <Kpi label="Receitas" value={d.month.income} icon={<TrendingUp className="h-4 w-4" />} tone="success" />
               <Kpi label="Despesas" value={d.month.expense} icon={<TrendingDown className="h-4 w-4" />} tone="destructive" />
               <Kpi label="Saldo" value={d.month.balance} icon={<Wallet className="h-4 w-4" />} tone={d.month.balance < 0 ? "destructive" : "primary"} />
@@ -312,10 +312,10 @@ function FixedVsVariable({ fixed, variable }: { fixed: number; variable: number 
 
 function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 min-w-0 flex-1 sm:flex-none">
       <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-9 w-[170px] bg-card/40">
+        <SelectTrigger className="h-9 w-full sm:w-[170px] bg-card/40">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -331,12 +331,12 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
 function Kpi({ label, value, icon, tone }: { label: string; value: number; icon: React.ReactNode; tone: "success" | "destructive" | "primary" }) {
   const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive" : "text-primary";
   return (
-    <div className="rounded-xl border border-border bg-card/40 p-4">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground">
+    <div className="rounded-xl border border-border bg-card/40 p-3 sm:p-4 min-w-0">
+      <div className="flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground">
         <span className={color}>{icon}</span>
-        {label}
+        <span className="truncate">{label}</span>
       </div>
-      <div className={`mt-2 text-2xl font-display font-semibold tabular-nums ${color}`}>{formatBRL(value)}</div>
+      <div className={`mt-2 text-lg sm:text-2xl font-display font-semibold tabular-nums truncate ${color}`}>{formatBRL(value)}</div>
     </div>
   );
 }
