@@ -158,8 +158,8 @@ function InstallmentsPage() {
       }
     >
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-5">
-        <FilterPill active={filter.kind === "all"} onClick={() => setFilter({ kind: "all" })}>
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mb-5">
+        <FilterPill active={filter.kind === "all"} onClick={() => setFilter({ kind: "all" })} className="col-span-2 sm:col-span-1">
           Visão geral
         </FilterPill>
         <Select
