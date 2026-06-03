@@ -166,7 +166,7 @@ function InstallmentsPage() {
           value={filter.kind === "month" ? filter.value : ""}
           onValueChange={(v) => v && setFilter({ kind: "month", value: v })}
         >
-          <SelectTrigger className={`w-[160px] h-9 ${filter.kind === "month" ? "ring-2 ring-primary" : ""}`}>
+          <SelectTrigger className={`w-full sm:w-[160px] h-9 ${filter.kind === "month" ? "ring-2 ring-primary" : ""}`}>
             <SelectValue placeholder="Por mês" />
           </SelectTrigger>
           <SelectContent>
@@ -181,7 +181,7 @@ function InstallmentsPage() {
           value={filter.kind === "year" ? filter.value : ""}
           onValueChange={(v) => v && setFilter({ kind: "year", value: v })}
         >
-          <SelectTrigger className={`w-[120px] h-9 ${filter.kind === "year" ? "ring-2 ring-primary" : ""}`}>
+          <SelectTrigger className={`w-full sm:w-[120px] h-9 ${filter.kind === "year" ? "ring-2 ring-primary" : ""}`}>
             <SelectValue placeholder="Por ano" />
           </SelectTrigger>
           <SelectContent>
@@ -196,7 +196,7 @@ function InstallmentsPage() {
           value={filter.kind === "account" ? filter.value : ""}
           onValueChange={(v) => v && setFilter({ kind: "account", value: v })}
         >
-          <SelectTrigger className={`w-[200px] h-9 ${filter.kind === "account" ? "ring-2 ring-primary" : ""}`}>
+          <SelectTrigger className={`w-full sm:w-[200px] h-9 ${filter.kind === "account" ? "ring-2 ring-primary" : ""}`}>
             <SelectValue placeholder="Por cartão/conta" />
           </SelectTrigger>
           <SelectContent>
