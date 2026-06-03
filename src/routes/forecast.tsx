@@ -47,7 +47,7 @@ function ForecastPage() {
               <TrendingUp className="h-4 w-4 text-primary" />
               <h2 className="font-medium">Saldo projetado</h2>
             </div>
-            <div className="h-72">
+            <div className="h-56 sm:h-72 -ml-2 sm:ml-0">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={q.data.series}>
                   <defs>

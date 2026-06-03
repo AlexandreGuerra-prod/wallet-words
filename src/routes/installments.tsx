@@ -158,15 +158,15 @@ function InstallmentsPage() {
       }
     >
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-5">
-        <FilterPill active={filter.kind === "all"} onClick={() => setFilter({ kind: "all" })}>
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mb-5">
+        <FilterPill active={filter.kind === "all"} onClick={() => setFilter({ kind: "all" })} className="col-span-2 sm:col-span-1">
           Visão geral
         </FilterPill>
         <Select
           value={filter.kind === "month" ? filter.value : ""}
           onValueChange={(v) => v && setFilter({ kind: "month", value: v })}
         >
-          <SelectTrigger className={`w-[160px] h-9 ${filter.kind === "month" ? "ring-2 ring-primary" : ""}`}>
+          <SelectTrigger className={`w-full sm:w-[160px] h-9 ${filter.kind === "month" ? "ring-2 ring-primary" : ""}`}>
             <SelectValue placeholder="Por mês" />
           </SelectTrigger>
           <SelectContent>
@@ -181,7 +181,7 @@ function InstallmentsPage() {
           value={filter.kind === "year" ? filter.value : ""}
           onValueChange={(v) => v && setFilter({ kind: "year", value: v })}
         >
-          <SelectTrigger className={`w-[120px] h-9 ${filter.kind === "year" ? "ring-2 ring-primary" : ""}`}>
+          <SelectTrigger className={`w-full sm:w-[120px] h-9 ${filter.kind === "year" ? "ring-2 ring-primary" : ""}`}>
             <SelectValue placeholder="Por ano" />
           </SelectTrigger>
           <SelectContent>
@@ -196,7 +196,7 @@ function InstallmentsPage() {
           value={filter.kind === "account" ? filter.value : ""}
           onValueChange={(v) => v && setFilter({ kind: "account", value: v })}
         >
-          <SelectTrigger className={`w-[200px] h-9 ${filter.kind === "account" ? "ring-2 ring-primary" : ""}`}>
+          <SelectTrigger className={`w-full sm:w-[200px] h-9 ${filter.kind === "account" ? "ring-2 ring-primary" : ""}`}>
             <SelectValue placeholder="Por cartão/conta" />
           </SelectTrigger>
           <SelectContent>
@@ -360,18 +360,19 @@ function InstallmentsPage() {
   );
 }
 
-function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function FilterPill({ active, onClick, children, className }: { active: boolean; onClick: () => void; children: React.ReactNode; className?: string }) {
   return (
     <button
       onClick={onClick}
       className={`h-9 px-3 rounded-md text-sm border transition ${
         active ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-accent/40"
-      }`}
+      } ${className ?? ""}`}
     >
       {children}
     </button>
   );
 }
+
 
 function PurchaseForm({
   mode,

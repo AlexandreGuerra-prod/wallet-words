@@ -1,59 +1,48 @@
-# Fase 3 — Plano
+# Otimização Mobile/Tablet — Gerente Finn
 
-Escopo aprovado: **Orçamentos por categoria, Faturas de cartão, Previsão de fluxo, Relatórios/Exportação, Alertas por e-mail.**
+Hoje o app foi desenhado para desktop: a navegação lateral fixa de 64px ocupa espaço precioso no celular, várias telas (Dashboard, Lançamentos, Faturas, Parcelas, Relatórios) usam grids/filtros lado a lado que estouram em telas pequenas, e tabelas/diálogos não rolam bem em mobile. A proposta é tornar **toda a aplicação totalmente responsiva**, sem mudar funcionalidades.
 
-## 1. Banco de dados (1 migração)
+## Escopo
 
-Novas tabelas (RLS `auth.uid() = user_id`, GRANTs para `authenticated`/`service_role`):
+Apenas mudanças de UI/layout (frontend). Nenhuma alteração em regras de negócio, banco ou server functions.
 
-- **`budgets`** — `category_id`, `month` (date, dia=1), `amount`, `alert_80_sent_at`, `alert_100_sent_at`.
-- **`credit_card_invoices`** — `account_id`, `reference_month`, `closing_date`, `due_date`, `total_amount`, `status` (`open|closed|paid`), `paid_at`.
-- Em `transactions`: adicionar `invoice_id uuid` (nullable) ligando lançamento de cartão à fatura.
+## O que vai mudar
 
-Funções SQL:
-- `assign_transaction_to_invoice()` — trigger que, ao inserir/atualizar transação de cartão, calcula a fatura correta pelo `closing_day` e cria/atribui.
-- `forecast_cashflow(_user_id, _days)` — soma saldo atual + recorrências previstas + faturas em aberto até a data.
+### 1. Shell e navegação (base de tudo)
+- **`AppNav`**: vira navegação adaptativa.
+  - **Mobile (<768px)**: sidebar escondida, abre como **drawer** (Sheet do shadcn) via botão "hambúrguer" no header. Itens em lista vertical com ícone + rótulo (sem depender de hover/tooltip, que não funciona em touch).
+  - **Tablet (768–1024px)**: sidebar compacta atual (64px com tooltip), igual desktop.
+  - **Desktop (≥1024px)**: igual hoje.
+- **`AppShell`**:
+  - Header sticky ganha botão de menu em mobile e o `action` (botão "Novo lançamento" etc.) fica acessível abaixo do título quando faltar espaço.
+  - Padding adaptativo: `px-4 py-4` no mobile, `px-6 py-6` no desktop.
+  - Remove `max-w-6xl` em mobile para usar toda a largura.
 
-## 2. Server functions (`src/lib/`)
+### 2. Padrões responsivos aplicados em todas as telas
+- **Barras de filtro**: hoje usam `flex flex-wrap` com `Select` de largura fixa `w-[170px]`. Vai virar `w-full sm:w-[170px]` em mobile e, quando houver muitos filtros, agrupar em um botão "Filtros" que abre um Sheet — mantendo a tela limpa.
+- **Grids de KPI**: `grid-cols-2 sm:grid-cols-2 lg:grid-cols-4` (2 cards por linha no celular em vez de 1, melhor uso do espaço).
+- **Gráficos `recharts`**: `ResponsiveContainer` já cuida da largura; altura reduzida em mobile (`h-48 md:h-64`), fontes de eixos menores, `YAxis width` reduzido e formatadores compactos (`R$ 1,2k`).
+- **Tabelas (Lançamentos, Faturas, Parcelas, Recorrências, Contas)**: em telas <md viram **lista de cards** (uma linha = um card empilhado com label/valor). Em ≥md mantêm a tabela atual. Padrão único aplicado via um wrapper utilitário.
+- **Diálogos (`Dialog`)**: em mobile usam altura quase-cheia, scroll interno, e os formulários passam de 2 colunas → 1 coluna (`grid-cols-1 md:grid-cols-2`).
+- **Chat**: bolhas com `max-w-[85%] md:max-w-[70%]`, input fixo no rodapé com safe-area iOS.
 
-- `budgets.functions.ts` — list (mês atual com gasto realizado vs limite), upsert, delete.
-- `invoices.functions.ts` — listByAccount, getDetail (lançamentos da fatura), markAsPaid.
-- `forecast.functions.ts` — `getCashflowForecast({ days })` → série diária de saldo projetado.
-- `reports.functions.ts` — `getReport({ from, to, groupBy })` → agregados; `exportCsv` / `exportPdf` retornando string base64.
+### 3. Telas individuais a revisar
+Aplicando os padrões acima, cada rota recebe uma passada:
+`/dashboard`, `/transactions`, `/accounts`, `/budgets`, `/invoices`, `/installments`, `/forecast`, `/reports`, `/goals`, `/recurrences`, `/import`, `/settings`, `/chat`, `/login`.
 
-## 3. Telas
+### 4. Tipografia, alvos de toque e meta viewport
+- Botões/links interativos com altura mínima de 40px (alvo de toque recomendado).
+- Texto base ≥14px em mobile; títulos `text-xl md:text-2xl`.
+- Verificar `<meta name="viewport" content="width=device-width, initial-scale=1">` no `__root.tsx` (TanStack Start já inclui, confirmar).
+- Tabelas/listas com `tabular-nums` para alinhar valores monetários.
 
-- **`/budgets`** — cards por categoria com Progress bar, cor verde/amarelo/vermelho conforme % gasto. Botão "Definir limite" abre dialog.
-- **`/invoices`** — para cada cartão, lista de faturas (mês de referência, total, status). Clicar abre detalhe com transações + botão "Marcar como paga".
-- **`/forecast`** — gráfico de linha (saldo projetado 30/60/90d) + lista de eventos futuros (recorrências, faturas a vencer).
-- **`/reports`** — filtro de período, gráficos (despesas por categoria, evolução mensal, comparativo receita/despesa), botões **Exportar CSV** e **Exportar PDF**.
+## Detalhes técnicos
 
-Sidebar (`app-nav.tsx`) ganha 4 ícones: Orçamentos, Faturas, Previsão, Relatórios.
+- **Breakpoints Tailwind padrão**: `sm` 640, `md` 768, `lg` 1024, `xl` 1280.
+- **Drawer mobile**: usar `Sheet` do shadcn (já instalado) controlado pelo `AppNav`. Hook `useIsMobile` já existe em `src/hooks/use-mobile.tsx`.
+- **Sem regressão desktop**: todas as classes adicionadas serão *mobile-first* com overrides `md:`/`lg:` para preservar a aparência atual em telas grandes.
+- **Sem mudança no design system**: cores, fontes e tokens em `src/styles.css` permanecem.
 
-Dashboard atual ganha um card resumo de orçamentos (top 3 mais estourados).
+## Entrega
 
-## 4. Alertas por e-mail
-
-- Setup de email infrastructure (`setup_email_infra` + `scaffold_transactional_email`).
-- Templates React Email: `budget-alert.tsx` (80% e 100%), `invoice-due-soon.tsx` (3 dias antes), `recurrence-due-soon.tsx`.
-- Server route `/api/public/cron/email-alerts` (verificada por header secret) chamada por pg_cron diariamente. Para cada user: checa orçamentos estourados não-notificados, faturas/recorrências vencendo em ≤3 dias, enfileira e-mails via `sendTransactionalEmail`.
-- Migration registra o job no `pg_cron` apontando para a URL estável `project--{id}.lovable.app`.
-
-## 5. Exportação
-
-- **CSV**: gerado server-side com `papaparse` (já vem), download via blob no cliente.
-- **PDF**: `pdf-lib` (puro JS, compatível com Worker) gera relatório com KPIs + tabela.
-
-## 6. Bibliotecas a adicionar
-
-`pdf-lib`, `papaparse`, `date-fns` (provavelmente já presente). React Email já entra com o scaffold.
-
-## 7. Ordem de entrega
-
-1. Migração (budgets + invoices + invoice_id em transactions + trigger + forecast)
-2. Server functions
-3. Telas Orçamentos, Faturas, Previsão, Relatórios + sidebar
-4. Setup de email + templates + cron de alertas
-5. QA visual e funcional
-
-Aprovo prosseguir?
+Após aprovar, eu implemento numa única passada e testo os breakpoints chave (375, 768, 1024) no preview.

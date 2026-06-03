@@ -148,35 +148,35 @@ function TransactionsPage() {
     >
       <div className="space-y-8">
         <section>
-          <div className="flex flex-wrap items-end gap-3 mb-3">
-            <div className="relative flex-1 min-w-[180px] max-w-sm">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-end gap-3 mb-3">
+            <div className="relative col-span-2 sm:flex-1 sm:min-w-[180px] sm:max-w-sm">
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar descrição…" className="pl-9" />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <Label className="text-xs">Mês</Label>
               <Select value={month} onValueChange={setMonth}>
-                <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[140px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   {MONTHS.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <Label className="text-xs">Ano</Label>
               <Select value={year} onValueChange={setYear}>
-                <SelectTrigger className="w-[110px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[110px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 col-span-2 min-w-0">
               <Label className="text-xs">Origem</Label>
               <Select value={kind} onValueChange={(v) => setKind(v as AccountKind)}>
-                <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[170px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="credit_card">Cartão de crédito</SelectItem>

@@ -95,7 +95,7 @@ function ReportsPage() {
 
           <div className="border border-border rounded-lg p-4 bg-card">
             <h3 className="font-medium mb-3">Receita vs despesa por mês</h3>
-            <div className="h-64">
+            <div className="h-56 sm:h-64 -ml-2 sm:ml-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={d.byMonth}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
